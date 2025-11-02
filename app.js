@@ -1,5 +1,21 @@
 // Goally App - Main JavaScript
 
+const firebaseConfig = {
+  apiKey: "AIzaSyAYTTANU8bM8FZAiDoZEdyYKHT7Cj43L-Y",
+  authDomain: "goally-dda53.firebaseapp.com",
+  projectId: "goally-dda53",
+  storageBucket: "goally-dda53.firebasestorage.app",
+  messagingSenderId: "230771902995",
+  appId: "1:230771902995:web:72b1513208c0c960600de6",
+  measurementId: "G-0XJZ5VNGE3"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUser = null; // Variable to hold the current user state
+
 // Data Structure
 let appData = {
     goals: [],
@@ -25,6 +41,11 @@ function setupEventListeners() {
     document.getElementById('goalForm').addEventListener('submit', saveGoal);
     document.getElementById('krForm').addEventListener('submit', saveKr);
     document.getElementById('initiativeForm').addEventListener('submit', saveInitiative);
+    
+    // Add listeners for new auth buttons
+    document.getElementById('signInBtn').addEventListener('click', signInWithGoogle);
+    document.getElementById('signOutBtn').addEventListener('click', signOut);
+
     window.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal')) e.target.style.display = 'none';
         if (!e.target.closest('.kr-menu-container')) closeAllKrMenus();
@@ -34,13 +55,17 @@ function setupEventListeners() {
 // Local Storage Functions
 function saveData() {
     localStorage.setItem('goallyData', JSON.stringify(appData));
+    if (currentUser) {
+        saveDataToFirestore();
+    }
 }
 
 function loadData() {
     const stored = localStorage.getItem('goallyData');
-    if (stored) {
+    // Only load from local storage if not logged in.
+    // If logged in, data will be loaded from Firestore.
+    if (stored && !currentUser) { 
         const parsedData = JSON.parse(stored);
-        // Ensure the basic structure is sound upon loading
         appData = {
             goals: parsedData.goals || [],
             keyResults: parsedData.keyResults || [],
@@ -370,4 +395,103 @@ function updateWeightLevelDisplay() {
     const labelDisplay = document.getElementById('weightLevelLabel');
     if (valueDisplay) valueDisplay.textContent = level;
     if (labelDisplay) labelDisplay.textContent = weightLevelDescriptions[level];
+}
+
+// --- START: NEW FIREBASE FUNCTIONS ---
+
+// Listen for authentication state changes
+auth.onAuthStateChanged(user => {
+    if (user) {
+        // User is signed in.
+        currentUser = user;
+        updateUIForUser(user);
+        handleUserData();
+    } else {
+        // User is signed out.
+        currentUser = null;
+        updateUIForGuest();
+        // Clear current data and reload from local storage to show local-only view
+        appData = { goals: [], keyResults: [], initiatives: [] };
+        loadData();
+        renderGoals();
+    }
+});
+
+// Decides whether to upload local data or download cloud data
+async function handleUserData() {
+    const localDataExists = (appData.goals && appData.goals.length > 0);
+    const userDocRef = db.collection('users').doc(currentUser.uid);
+    const doc = await userDocRef.get();
+
+    if (localDataExists && !doc.exists) {
+        // User has local data and it's their first time signing in -> UPLOAD local data
+        console.log("Local data exists, uploading to Firebase...");
+        await saveDataToFirestore();
+    } else {
+        // Otherwise, always download from Firebase to get the latest cloud version
+        console.log("Loading data from Firebase...");
+        await loadDataFromFirestore();
+    }
+    renderGoals();
+}
+
+
+// Sign in with Google
+function signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(error => console.error("Sign in error", error));
+}
+
+// Sign out
+function signOut() {
+    auth.signOut().catch(error => console.error("Sign out error", error));
+}
+
+// Update UI when user is logged in
+function updateUIForUser(user) {
+    document.getElementById('signInBtn').style.display = 'none';
+    document.getElementById('userProfile').style.display = 'flex';
+    document.getElementById('userName').textContent = user.displayName;
+    document.getElementById('userPhoto').src = user.photoURL;
+}
+
+// Update UI when user is logged out
+function updateUIForGuest() {
+    document.getElementById('signInBtn').style.display = 'block';
+    document.getElementById('userProfile').style.display = 'none';
+}
+
+// Save the entire appData object to Firestore
+async function saveDataToFirestore() {
+    if (!currentUser) return;
+    try {
+        await db.collection('users').doc(currentUser.uid).set(appData);
+        console.log("Data saved to Firestore.");
+    } catch (error) {
+        console.error("Error saving data to Firestore:", error);
+    }
+}
+
+// Load data from Firestore
+async function loadDataFromFirestore() {
+    if (!currentUser) return;
+    try {
+        const doc = await db.collection('users').doc(currentUser.uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            appData = {
+                goals: data.goals || [],
+                keyResults: data.keyResults || [],
+                initiatives: data.initiatives || []
+            };
+            console.log("Data loaded from Firestore.");
+        } else {
+            console.log("No document for this user yet.");
+            // Start with fresh data if nothing in the cloud
+            appData = { goals: [], keyResults: [], initiatives: [] };
+        }
+    } catch (error) {
+        console.error("Error loading data from Firestore:", error);
+    }
+    renderGoals(); // Always re-render after loading
 }
