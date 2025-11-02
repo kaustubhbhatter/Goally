@@ -15,6 +15,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 let currentUser = null; // Variable to hold the current user state
+let isDataLoadedSuccessfully = false; // <-- ADD THIS FLAG
 
 // Data Structure
 let appData = {
@@ -376,7 +377,6 @@ function openEditInitiativeModal(initiativeId) {
     document.getElementById('initiativeId').value = initiative.id;
     document.getElementById('initiativeKrId').value = initiative.krId;
     document.getElementById('initiativeName').value = initiative.name;
-    document.getElementById('initiativeDescription').value = initiative.description || '';
     document.getElementById('initiativeWeightLevel').value = initiative.weightLevel;
     document.getElementById('initiativeStatus').value = initiative.status;
     updateWeightLevelDisplay();
@@ -409,6 +409,7 @@ auth.onAuthStateChanged(user => {
     } else {
         // User is signed out.
         currentUser = null;
+        isDataLoadedSuccessfully = false;
         updateUIForGuest();
         // Clear current data and reload from local storage to show local-only view
         appData = { goals: [], keyResults: [], initiatives: [] };
@@ -464,7 +465,17 @@ function updateUIForGuest() {
 // Save the entire appData object to Firestore
 async function saveDataToFirestore() {
     if (!currentUser) return;
+
+    // --- THE SMARTER BOUNCER ---
+    if (!isDataLoadedSuccessfully) {
+        console.error("CRITICAL: Save aborted. The initial data from the cloud was not loaded successfully. Saving now would overwrite your cloud data.");
+        alert("Save failed: Your data couldn't be loaded from the cloud. Please check your internet connection and refresh the page to prevent data loss.");
+        return; // <-- EJECT!
+    }
+
     try {
+        // Add or update the lastModified timestamp
+        appData.lastModified = new Date().getTime();
         await db.collection('users').doc(currentUser.uid).set(appData);
         console.log("Data saved to Firestore.");
     } catch (error) {
@@ -475,23 +486,33 @@ async function saveDataToFirestore() {
 // Load data from Firestore
 async function loadDataFromFirestore() {
     if (!currentUser) return;
+    isDataLoadedSuccessfully = false; // Reset flag at the start of every load attempt
+    console.log('Loading data from Firestore...');
     try {
         const doc = await db.collection('users').doc(currentUser.uid).get();
+
         if (doc.exists) {
             const data = doc.data();
             appData = {
                 goals: data.goals || [],
                 keyResults: data.keyResults || [],
-                initiatives: data.initiatives || []
+                initiatives: data.initiatives || [],
+                lastModified: data.lastModified || 0
             };
-            console.log("Data loaded from Firestore.");
+            console.log("Data loaded from Firestore document.");
         } else {
-            console.log("No document for this user yet.");
-            // Start with fresh data if nothing in the cloud
+            console.log("No Firestore document found for new user.");
+            // For a new user, the "load" is conceptually successful because we're starting fresh.
+            // We must set the flag to true, otherwise their very first save will be blocked.
             appData = { goals: [], keyResults: [], initiatives: [] };
         }
+        
+        isDataLoadedSuccessfully = true; // <-- SET FLAG TO TRUE ON SUCCESS
+        console.log("Data load successful. Flag set to true.");
+
     } catch (error) {
-        console.error("Error loading data from Firestore:", error);
+        isDataLoadedSuccessfully = false; // Ensure flag is false on failure
+        console.error('Error loading from Firestore:', error);
+        alert('Could not load data from the cloud. Please check your connection.');
     }
-    renderGoals(); // Always re-render after loading
 }
