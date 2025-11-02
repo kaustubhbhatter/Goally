@@ -18,6 +18,18 @@
                 </svg>
                 <span>Add Goal</span>
             </button>
+            </button>
+
+            <!-- START: Add this new div for authentication -->
+            <div id="authContainer" class="auth-container">
+                <button id="signInBtn" class="btn btn--secondary">Sign In with Google</button>
+                <div id="userProfile" style="display: none;">
+                    <img id="userPhoto" src="" alt="User Photo">
+                    <span id="userName"></span>
+                    <button id="signOutBtn" class="btn btn--secondary btn--sm">Sign Out</button>
+                </div>
+            </div>
+            <!-- END: Add this new div -->
         </header>
 
         <div id="goalsContainer" class="goals-container">
@@ -109,7 +121,11 @@
             </form>
         </div>
     </div>
-
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
