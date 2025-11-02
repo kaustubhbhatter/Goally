@@ -243,3 +243,29 @@ header h1 { font-size: var(--font-size-4xl); margin-bottom: var(--space-8); }
 .status-pending { background-color: #6c757d; }
 .status-in-progress { background-color: #17a2b8; }
 .status-done { background-color: #28a745; }
+
+/* -- Authentication UI -- */
+.auth-container {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    z-index: 10;
+    color: white;
+}
+#userProfile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0,0,0,0.3);
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+#userPhoto {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+#userName {
+    font-weight: var(--font-weight-medium);
+}
