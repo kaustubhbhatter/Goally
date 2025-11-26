@@ -55,7 +55,13 @@ function setupEventListeners() {
 
 // Local Storage Functions
 function saveData() {
-    localStorage.setItem('goallyData', JSON.stringify(appData));
+    // SECURITY FIX: Only save to Local Storage if the user is NOT logged in.
+    // We do not want to cache private cloud data in the browser's local storage.
+    if (!currentUser) {
+        localStorage.setItem('goallyData', JSON.stringify(appData));
+    }
+    
+    // If logged in, save to Cloud only
     if (currentUser) {
         saveDataToFirestore();
     }
