@@ -29,7 +29,7 @@
   --color-text-secondary: var(--color-slate-500);
   --color-primary: var(--color-teal-500);
   --color-primary-hover: var(--color-teal-600);
-  --color-secondary: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-secondary: rgba(var(--color-brown-600-rgb), 0.35);
   --color-secondary-hover: rgba(var(--color-brown-600-rgb), 0.2);
   --color-btn-primary-text: var(--color-white);
   --color-border: rgba(var(--color-brown-600-rgb), 0.2);
@@ -85,12 +85,49 @@ textarea.form-control { font-family: var(--font-family-base); }
 /* Layout & Main components */
 .container { max-width: var(--container-xl); margin: 0 auto; padding: var(--space-20); }
 header { text-align: center; margin-bottom: var(--space-32); position: relative; }
-header h1, header .tagline { color: var(--color-white); text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }
+header h1, header .tagline { color: var(--color-black); text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }
 header h1 { font-size: var(--font-size-4xl); margin-bottom: var(--space-8); }
-.tagline { font-size: var(--font-size-lg); opacity: 0.9; }
-.add-goal-header-btn { position: absolute; top: 0; right: 0; background: rgba(255,255,255,0.2); color: white; }
-.add-goal-header-btn:hover { background: rgba(255,255,255,0.3); }
-.add-goal-header-btn span { display: none; }
+.tagline { font-size: var(--font-size-lg); opacity: 0.9; color: var(--color-black); }
+/* --- Replace your existing .add-goal-header-btn block with this --- */
+.add-goal-header-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  
+  /* Make it stand out (Primary Color) */
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  
+  /* SIZE FIXES: Override the small .icon-btn styles */
+  width: auto !important; 
+  height: auto !important;
+  padding: 10px 6px !important; /* Wider padding */
+  border-radius: var(--radius-base);
+}
+
+.add-goal-header-btn:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+/* Force the text to be visible on ALL screen sizes to keep width */
+.add-goal-header-btn span {
+  display: inline !important; 
+  margin-left: 8px;
+  font-weight: 600;
+}
+.auth-container .btn {
+  background-color: rgba(0,0,0, 0.45); /* Semi-transparent light background */
+  color: rgba(255, 255, 255, 0.95); /* Bright "Slightly White" text */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+  backdrop-filter: blur(4px);
+}
+.auth-container .btn:hover {
+  background-color: rgba(255, 255, 255, 0.25); /* Brighter on hover */
+  color: #ffffff; /* Pure white on hover */
+}
+.addGoalBtnMain {width: 150px;}
 @media (min-width: 768px) { .add-goal-header-btn span { display: inline; margin-left: var(--space-8); } }
 .goals-container { display: flex; flex-direction: column; gap: var(--space-20); }
 .empty-state { text-align: center; padding: 60px 40px; color: var(--color-white); background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.3); border-radius: var(--radius-lg); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
@@ -185,7 +222,7 @@ header h1 { font-size: var(--font-size-4xl); margin-bottom: var(--space-8); }
 .progress-high { background: var(--color-success); }
 
 /* Icon buttons & Expand */
-.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; background: rgba(255,255,255,0.1); border-radius: var(--radius-sm); cursor: pointer; transition: all 150ms ease; color: var(--color-white); }
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; background: rgba(0,0,0,0.45); border-radius: var(--radius-sm); cursor: pointer; transition: all 150ms ease; color: var(--color-white); }
 .icon-btn:hover { background: rgba(255,255,255,0.2); }
 .icon-btn-danger { color: #ff8a8a; }
 .icon-btn-danger:hover { background: rgba(var(--color-error-rgb), 0.2); color: var(--color-white); }
