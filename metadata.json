@@ -1,0 +1,6 @@
+
+{
+  "name": "Goally - AI Goal Tracker",
+  "description": "A visually appealing and responsive goal tracker that uses Key Results (KRs) and Initiatives to measure progress. Integrated with Gemini for AI-assisted goal and initiative creation, and Firebase for secure, personalized data storage.",
+  "requestFramePermissions": []
+}
